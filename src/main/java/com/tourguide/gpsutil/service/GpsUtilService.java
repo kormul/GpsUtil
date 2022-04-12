@@ -1,7 +1,11 @@
-package com.tourguide.gpsutil.service;
+ package com.tourguide.gpsutil.service;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,8 +21,9 @@ public class GpsUtilService {
 	private Logger logger = LogManager.getLogger();
 
 	private GpsUtil gpsUtil = new GpsUtil();
-
 	
+	private ExecutorService executorService = Executors.newFixedThreadPool(32000);
+
 	public VisitedLocation getUserLocation(UUID userId) {
 		
 		logger.debug("Get User Location");
@@ -29,7 +34,17 @@ public class GpsUtilService {
 		
 		logger.debug("Get User Location");
 		
-		return gpsUtil.getAttractions();
+		
+		try {
+			return CompletableFuture.supplyAsync(()-> {	
+				return gpsUtil.getAttractions();
+			}, executorService ).get();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 	
 }
